@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dassam Falls — Jharkhand Tourism</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1F3A2E;
+    --forest-deep:#142720;
+    --laterite:#B5502E;
+    --paper:#EFE9DA;
+    --ink:#16211B;
+    --ochre:#C89B3C;
+    --line: rgba(22,33,27,0.14);
+    --good:#3E6B4F;
+    --warn:#B5502E;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3{ font-family:'Roboto Slab', serif; }
+
+  header.topbar{
+    background:var(--forest-deep);
+    color:var(--paper);
+    padding:16px 32px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    border-bottom:3px solid var(--laterite);
+  }
+  header.topbar .mark{ font-family:'Roboto Slab',serif; font-weight:700; font-size:19px; letter-spacing:0.2px; }
+  header.topbar .sub{ font-size:13px; opacity:0.7; }
+
+  .hero{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap:0;
+    background:var(--forest);
+    color:var(--paper);
+  }
+  @media (max-width: 860px){ .hero{ grid-template-columns: 1fr; } }
+
+  .hero-text{ padding:48px 40px 40px; max-width:520px; }
+  .hero-text .updated{
+    font-size:13px;
+    color:var(--ochre);
+    margin-bottom:14px;
+  }
+  .hero-text h1{ font-size:38px; line-height:1.1; margin-bottom:14px; }
+  .hero-text p{ font-size:16px; color:rgba(239,233,218,0.85); max-width:46ch; }
+  .hero-meta{ display:flex; gap:22px; margin-top:28px; flex-wrap:wrap; }
+  .hero-meta div{ font-size:13px; }
+  .hero-meta .num{ font-family:'Roboto Slab',serif; font-size:20px; display:block; color:var(--ochre); }
+
+  #map{ min-height:340px; width:100%; }
+
+  main{ max-width:1040px; margin:0 auto; padding:44px 32px 80px; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    margin-bottom:44px;
+  }
+  @media (max-width:700px){ .grid{ grid-template-columns: 1fr 1fr; } }
+
+  .card{
+    background:var(--paper);
+    padding:22px 20px;
+  }
+  .card .icon{ font-size:20px; margin-bottom:10px; display:block; }
+  .card h3{ font-size:15px; margin-bottom:6px; }
+  .card p{ font-size:13.5px; color:rgba(22,33,27,0.72); }
+  .status{
+    display:inline-block;
+    margin-top:10px;
+    font-size:12px;
+    padding:3px 9px;
+    border-radius:2px;
+  }
+  .status.good{ background:rgba(62,107,79,0.14); color:var(--good); }
+  .status.warn{ background:rgba(181,80,46,0.14); color:var(--warn); }
+
+  section.block{ margin-bottom:52px; }
+  section.block h2{ font-size:22px; margin-bottom:6px; }
+  section.block .lede{ font-size:14px; color:rgba(22,33,27,0.6); margin-bottom:22px; max-width:60ch; }
+
+  .route-list{ display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line); }
+  .route-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 4px; border-bottom:1px solid var(--line);
+    font-size:14.5px;
+  }
+  .route-item .mode{ font-weight:600; }
+  .route-item .detail{ color:rgba(22,33,27,0.6); font-size:13px; }
+
+  form.update-form{
+    background:var(--forest);
+    color:var(--paper);
+    padding:32px;
+    display:grid;
+    gap:16px;
+    max-width:640px;
+  }
+  form.update-form label{ font-size:13px; display:block; margin-bottom:6px; color:var(--ochre); }
+  form.update-form input, form.update-form select, form.update-form textarea{
+    width:100%;
+    background:rgba(239,233,218,0.06);
+    border:1px solid rgba(239,233,218,0.25);
+    color:var(--paper);
+    padding:10px 12px;
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+    border-radius:2px;
+  }
+  form.update-form textarea{ min-height:70px; resize:vertical; }
+  form.update-form button{
+    justify-self:start;
+    background:var(--laterite);
+    color:var(--paper);
+    border:none;
+    padding:12px 22px;
+    font-size:14px;
+    font-weight:600;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .points-badge{ font-size:12px; color:var(--ochre); }
+
+  .ticket{
+    border:1px solid var(--line);
+    padding:18px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:12px;
+  }
+  .ticket .issue{ font-weight:600; font-size:14.5px; margin-bottom:4px; }
+  .ticket .loc{ font-size:13px; color:rgba(22,33,27,0.6); }
+  .ticket .pipeline{ font-size:12px; color:rgba(22,33,27,0.5); margin-top:8px; }
+
+  footer{ text-align:center; padding:30px; font-size:12px; color:rgba(22,33,27,0.5); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="mark">Jharkhand, Live</span>
+  <span class="sub">smart tourism &amp; accessibility platform — prototype</span>
+</header>
+
+<div class="hero">
+  <div class="hero-text">
+    <div class="updated">Last verified 2 days ago by a visitor</div>
+    <h1>Dassam Falls</h1>
+    <p>A 44-metre cascade on the Kanchi River, 34 km south of Ranchi. Best viewed July–October when the flow is strongest.</p>
+    <div class="hero-meta">
+      <div><span class="num">92%</span>reachable by car</div>
+      <div><span class="num">Fair</span>wheelchair access</div>
+      <div><span class="num">3</span>open complaints</div>
+    </div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<main>
+
+  <div class="grid">
+    <div class="card">
+      <span class="icon">🚻</span>
+      <h3>Washrooms</h3>
+      <p>Two public units near the entry gate. Reported functional but limited water supply.</p>
+      <span class="status warn">Needs attention</span>
+    </div>
+    <div class="card">
+      <span class="icon">♿</span>
+      <h3>Accessibility</h3>
+      <p>Paved path to the main viewpoint. Steps below that point are not wheelchair-accessible.</p>
+      <span class="status warn">Partial</span>
+    </div>
+    <div class="card">
+      <span class="icon">🅿️</span>
+      <h3>Parking</h3>
+      <p>Open ground parking, roughly 60 vehicles. No charge on weekdays.</p>
+      <span class="status good">Available</span>
+    </div>
+    <div class="card">
+      <span class="icon">🏥</span>
+      <h3>Nearest hospital</h3>
+      <p>Sadar Hospital, Ranchi — approximately 40 minutes by road.</p>
+      <span class="status good">Confirmed</span>
+    </div>
+    <div class="card">
+      <span class="icon">🧹</span>
+      <h3>Cleanliness</h3>
+      <p>Generally maintained; litter accumulates near the food stalls on weekends.</p>
+      <span class="status good">Good</span>
+    </div>
+    <div class="card">
+      <span class="icon">🚦</span>
+      <h3>Road condition</h3>
+      <p>State highway in good condition. Last 2 km is a narrower approach road.</p>
+      <span class="status good">Clear</span>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>How to reach</h2>
+    <p class="lede">Route and mode options pulled from the destination record — replace with live routing once OSRM or Routes API is wired in.</p>
+    <div class="route-list">
+      <div class="route-item">
+        <span class="mode">By road (self-drive)</span>
+        <span class="detail">34 km from Ranchi via SH-3 · ~1 hr</span>
+      </div>
+      <div class="route-item">
+        <span class="mode">Public bus</span>
+        <span class="detail">Ranchi bus stand → Taimara, then shared auto</span>
+      </div>
+      <div class="route-item">
+        <span class="mode">Taxi</span>
+        <span class="detail">Available from Ranchi railway station, ~₹900 one-way</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Update this place</h2>
+    <p class="lede">Recent visitors keep this page accurate. Verified updates earn tourist points.</p>
+    <form class="update-form" onsubmit="event.preventDefault(); alert('Wire this up to Firebase Storage + Firestore.');">
+      <div>
+        <label>Photo</label>
+        <input type="file" accept="image/*">
+      </div>
+      <div>
+        <label>What are you reporting?</label>
+        <select>
+          <option>Washroom</option>
+          <option>Accessibility</option>
+          <option>Cleanliness</option>
+          <option>Road / traffic</option>
+          <option>Parking</option>
+        </select>
+      </div>
+      <div>
+        <label>Description</label>
+        <textarea placeholder="What did you see?"></textarea>
+      </div>
+      <button type="submit">Submit update</button>
+      <span class="points-badge">+15 tourist points on verification</span>
+    </form>
+  </section>
+
+  <section class="block">
+    <h2>Open complaints</h2>
+    <p class="lede">Community-reported issues moving through review.</p>
+    <div class="ticket">
+      <div>
+        <div class="issue">Dirty public washroom</div>
+        <div class="loc">Near main entry gate</div>
+        <div class="pipeline">Submitted → Verified → Forwarded → In Progress → Resolved</div>
+      </div>
+      <span class="status warn">In Progress</span>
+    </div>
+    <div class="ticket">
+      <div>
+        <div class="issue">No wheelchair ramp at lower viewpoint</div>
+        <div class="loc">Lower viewing deck</div>
+        <div class="pipeline">Submitted → Verified → Forwarded</div>
+      </div>
+      <span class="status warn">Forwarded</span>
+    </div>
+  </section>
+
+</main>
+
+<footer>Prototype — mock data. Swap the JS object below for a real API/Firestore call.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // Mock destination record — this shape is what your backend/Firestore doc should match
+  const destination = {
+    name: "Dassam Falls",
+    lat: 23.2540,
+    lng: 85.4530,
+    lastVerified: "2 days ago"
+  };
+
+  const map = L.map('map', { scrollWheelZoom: false }).setView([destination.lat, destination.lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(map);
+  L.marker([destination.lat, destination.lng]).addTo(map)
+    .bindPopup(destination.name)
+    .openPopup();
+</script>
+
+</body>
+</html>
